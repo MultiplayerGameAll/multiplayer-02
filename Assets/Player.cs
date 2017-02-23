@@ -6,6 +6,7 @@ public class Player : NetworkBehaviour
 {
     public float moveSpeed = 0.2f;
     public float moveRotation = 10;
+    public GameObject powerup;
 
     [SyncVar]
     private float green;
@@ -32,6 +33,10 @@ public class Player : NetworkBehaviour
             {
                 CmdChangeColor();
             }
+            if (Input.GetKey(KeyCode.G))
+            {
+                CmdSpawnPowerup();
+            }
         }
     }
 
@@ -39,5 +44,13 @@ public class Player : NetworkBehaviour
     public void CmdChangeColor()
     {
         green = 255;
+    }
+
+    [Command]
+    public void CmdSpawnPowerup()
+    {
+         var go = (GameObject)Instantiate(powerup, transform.position + new Vector3(0,1,0), Quaternion.identity);
+         NetworkServer.Spawn(go);
+
     }
 }

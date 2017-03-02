@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using UnityEngine.Networking;
 
 public class Player : NetworkBehaviour
@@ -11,17 +10,29 @@ public class Player : NetworkBehaviour
     [SyncVar]
     private float green;
 
+   private NetworkStartPosition[] spawnPoints;
+
+   private static int idx;
+   
+   public GameObject[] objects;
+
     // Use this for initialization
     void Start()
     {
-
+        GameObject obj = Instantiate(objects[idx++], transform.position, transform.rotation);
+        if(idx >= objects.Length){
+            idx = 0;
+        }
+        obj.transform.parent = transform;
+   //    (Instantiate (m_Prefab, position, rotation) as GameObject).transform.parent = parentGameObject.transform; 
+       spawnPoints = FindObjectsOfType<NetworkStartPosition>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        Renderer renderer = GetComponent<Renderer>();
-        renderer.material.color = new Color(0, green, 0);
+        // Renderer renderer = GetComponent<Renderer>();
+        // renderer.material.color = new Color(0, green, 0);
 
 
         if (isLocalPlayer)
@@ -33,7 +44,7 @@ public class Player : NetworkBehaviour
             {
                 CmdChangeColor();
             }
-            if (Input.GetKey(KeyCode.G))
+            if (Input.GetKeyDown(KeyCode.G))
             {
                 CmdSpawnPowerup();
             }
@@ -49,8 +60,17 @@ public class Player : NetworkBehaviour
     [Command]
     public void CmdSpawnPowerup()
     {
-         var go = (GameObject)Instantiate(powerup, transform.position + new Vector3(0,1,0), Quaternion.identity);
-         NetworkServer.Spawn(go);
+       Vector3 spawnPoint = transform.position;
+
+        // If there is a spawn point array and the array is not empty, pick a spawn point at random
+       if (spawnPoints != null && spawnPoints.Length > 0)
+        {
+           spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)].transform.position;
+        }        
+
+
+         var go = (GameObject)Instantiate(powerup, spawnPoint + new Vector3(0,1,0), Quaternion.identity);
+         NetworkServer.SpawnWithClientAuthority(go, connectionToClient);
 
     }
 }
